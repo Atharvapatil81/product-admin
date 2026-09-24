@@ -32,7 +32,7 @@ export default function ProductFormModal({ categories, existing, onClose, onSubm
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (isSubmitting) return; // guards against rapid double-click submits
+    if (isSubmitting) return;
     if (!validate()) return;
 
     setIsSubmitting(true);
@@ -46,19 +46,32 @@ export default function ProductFormModal({ categories, existing, onClose, onSubm
   }
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/40 p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-lg bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">{existing ? "Edit product" : "Add product"}</h2>
+    <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/50 p-4">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+      >
+        <h2 className="mb-4 text-lg font-bold text-slate-900">
+          {existing ? "Edit product" : "Add product"}
+        </h2>
 
         <div className="mb-3">
-          <label className="mb-1 block text-xs text-gray-600">Title</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
-          {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
+          <label className="mb-1 block text-xs font-semibold text-slate-700">Title</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          {errors.title && <p className="mt-1 text-xs font-medium text-red-600">{errors.title}</p>}
         </div>
 
         <div className="mb-3">
-          <label className="mb-1 block text-xs text-gray-600">Category</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+          <label className="mb-1 block text-xs font-semibold text-slate-700">Category</label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
             {categories.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -67,27 +80,48 @@ export default function ProductFormModal({ categories, existing, onClose, onSubm
 
         <div className="mb-3 grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-600">Price</label>
-            <input value={price} onChange={(e) => setPrice(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
-            {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
+            <label className="mb-1 block text-xs font-semibold text-slate-700">Price</label>
+            <input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            {errors.price && <p className="mt-1 text-xs font-medium text-red-600">{errors.price}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-600">Stock</label>
-            <input value={stock} onChange={(e) => setStock(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
-            {errors.stock && <p className="mt-1 text-xs text-red-600">{errors.stock}</p>}
+            <label className="mb-1 block text-xs font-semibold text-slate-700">Stock</label>
+            <input
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            {errors.stock && <p className="mt-1 text-xs font-medium text-red-600">{errors.stock}</p>}
           </div>
         </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block text-xs text-gray-600">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" rows={3} />
+        <div className="mb-5">
+          <label className="mb-1 block text-xs font-semibold text-slate-700">Description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            rows={3}
+          />
         </div>
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-gray-300 px-3 py-1.5 text-sm">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
             Cancel
           </button>
-          <button type="submit" disabled={isSubmitting} className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+          >
             {existing ? "Save changes" : "Add product"}
           </button>
         </div>

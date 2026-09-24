@@ -99,20 +99,16 @@ export default function ProductsPage() {
     router.push("/login");
   }
 
-  function refresh() {
-    setState({ page: state.page }); // re-triggers the fetch effect
-  }
-
   return (
     <RequireAuth>
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-          <h1 className="text-lg font-semibold">Product Admin</h1>
-          <div className="flex items-center gap-3 text-sm text-gray-600">
-            <span>{username}</span>
+      <div className="min-h-screen bg-slate-100">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
+          <h1 className="text-lg font-bold text-slate-900">Product Admin</h1>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="font-medium text-slate-600">{username}</span>
             <button
               onClick={handleLogout}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Log out
             </button>
@@ -120,20 +116,19 @@ export default function ProductsPage() {
         </div>
 
         <div className="p-6">
-          {/* Toolbar: search, category, sort, add */}
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <input
               type="search"
               placeholder="Search products…"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="min-w-[220px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="min-w-[220px] flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <select
               value={state.category}
               disabled={!!state.q}
               onChange={(e) => setState({ category: e.target.value, page: 1 })}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
             >
               <option value="">All categories</option>
               {categories.map((c) => (
@@ -150,7 +145,7 @@ export default function ProductsPage() {
                   : ["", "asc"];
                 setState({ sortBy, order: order as "asc" | "desc" });
               }}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
             >
               <option value="">Sort by…</option>
               <option value="title-asc">Title (A–Z)</option>
@@ -163,30 +158,30 @@ export default function ProductsPage() {
                 setEditingProduct(null);
                 setFormOpen(true);
               }}
-              className="ml-auto rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white"
+              className="ml-auto rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
             >
               + Add product
             </button>
           </div>
           {state.q && (
-            <p className="mb-4 -mt-2 text-xs text-gray-500">
+            <p className="mb-4 -mt-2 text-xs font-medium text-slate-500">
               Category filter is disabled while searching — the API can only
               do one at a time, so search takes priority.
             </p>
           )}
 
           {status === "loading" && (
-            <div className="py-16 text-center text-sm text-gray-500">
+            <div className="rounded-lg border border-slate-200 bg-white py-16 text-center text-sm font-medium text-slate-500 shadow-sm">
               Loading products…
             </div>
           )}
           {status === "error" && (
-            <div className="py-16 text-center text-sm text-gray-500">
+            <div className="rounded-lg border border-slate-200 bg-white py-16 text-center text-sm font-medium text-slate-500 shadow-sm">
               Something went wrong loading products.
               <div className="mt-3">
                 <button
-                  onClick={refresh}
-                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+                  onClick={() => setState({ page: state.page })}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Retry
                 </button>
@@ -194,17 +189,16 @@ export default function ProductsPage() {
             </div>
           )}
           {status === "success" && products.length === 0 && (
-            <div className="py-16 text-center text-sm text-gray-500">
+            <div className="rounded-lg border border-slate-200 bg-white py-16 text-center text-sm font-medium text-slate-500 shadow-sm">
               No products match your filters.
             </div>
           )}
 
           {status === "success" && products.length > 0 && (
             <>
-              {/* Desktop table */}
-              <table className="hidden w-full border-collapse overflow-hidden rounded-lg border border-gray-200 bg-white text-sm md:table">
+              <table className="hidden w-full border-collapse overflow-hidden rounded-lg border border-slate-200 bg-white text-sm shadow-sm md:table">
                 <thead>
-                  <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
+                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <th className="p-3"></th>
                     <th className="p-3">Title</th>
                     <th className="p-3">Category</th>
@@ -216,15 +210,15 @@ export default function ProductsPage() {
                 </thead>
                 <tbody>
                   {products.map((p) => (
-                    <tr key={p.id} className="border-b border-gray-100">
+                    <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50">
                       <td className="p-3">
                         <img
                           src={p.thumbnail}
                           alt={p.title}
-                          className="h-10 w-10 rounded object-cover"
+                          className="h-10 w-10 rounded object-cover ring-1 ring-slate-200"
                         />
                       </td>
-                      <td className="p-3 font-medium">
+                      <td className="p-3 font-semibold text-slate-900">
                         <button
                           onClick={() => router.push(`/products/${p.id}`)}
                           className="text-left hover:text-indigo-600"
@@ -232,23 +226,23 @@ export default function ProductsPage() {
                           {p.title}
                         </button>
                       </td>
-                      <td className="p-3 text-gray-500">{p.category}</td>
-                      <td className="p-3">${p.price}</td>
-                      <td className="p-3">{p.rating.toFixed(1)}★</td>
-                      <td className="p-3">{p.stock}</td>
+                      <td className="p-3 text-slate-600">{p.category}</td>
+                      <td className="p-3 font-medium text-slate-900">${p.price}</td>
+                      <td className="p-3 text-slate-600">{p.rating.toFixed(1)}★</td>
+                      <td className="p-3 text-slate-600">{p.stock}</td>
                       <td className="p-3">
                         <button
                           onClick={() => {
                             setEditingProduct(p);
                             setFormOpen(true);
                           }}
-                          className="mr-2 text-xs text-gray-600"
+                          className="mr-3 text-xs font-semibold text-slate-600 hover:text-indigo-600"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => setDeletingId(p.id)}
-                          className="text-xs text-red-600"
+                          className="text-xs font-semibold text-red-600 hover:text-red-700"
                         >
                           Delete
                         </button>
@@ -258,38 +252,37 @@ export default function ProductsPage() {
                 </tbody>
               </table>
 
-              {/* Mobile cards */}
               <div className="flex flex-col gap-3 md:hidden">
                 {products.map((p) => (
                   <div
                     key={p.id}
-                    className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3"
+                    className="flex gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
                   >
                     <img
                       src={p.thumbnail}
                       alt={p.title}
-                      className="h-14 w-14 rounded object-cover"
+                      className="h-14 w-14 rounded object-cover ring-1 ring-slate-200"
                     />
                     <div>
                       <button
                         onClick={() => router.push(`/products/${p.id}`)}
-                        className="text-left font-medium hover:text-indigo-600"
+                        className="text-left font-semibold text-slate-900 hover:text-indigo-600"
                       >
                         {p.title}
                       </button>
-                      <div className="mt-1 flex gap-3 text-xs text-gray-500">
+                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs font-medium text-slate-500">
                         <span>{p.category}</span>
                         <span>${p.price}</span>
                         <span>{p.rating.toFixed(1)}★</span>
                         <span>{p.stock} in stock</span>
                       </div>
-                      <div className="mt-2 flex gap-3 text-xs">
+                      <div className="mt-2 flex gap-3 text-xs font-semibold">
                         <button
                           onClick={() => {
                             setEditingProduct(p);
                             setFormOpen(true);
                           }}
-                          className="text-gray-600"
+                          className="text-slate-600"
                         >
                           Edit
                         </button>
@@ -305,16 +298,15 @@ export default function ProductsPage() {
                 ))}
               </div>
 
-              {/* Pagination */}
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">
+                <span className="font-medium text-slate-600">
                   Showing {from}–{to} of {total}
                 </span>
                 <div className="flex items-center gap-1">
                   <button
                     disabled={state.page <= 1}
                     onClick={() => setState({ page: state.page - 1 })}
-                    className="rounded-md border border-gray-300 px-3 py-1.5 disabled:opacity-40"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 disabled:opacity-40"
                   >
                     Prev
                   </button>
@@ -324,10 +316,10 @@ export default function ProductsPage() {
                       <button
                         key={n}
                         onClick={() => setState({ page: n })}
-                        className={`rounded-md border px-3 py-1.5 ${
+                        className={`rounded-md border px-3 py-1.5 font-medium ${
                           n === state.page
                             ? "border-indigo-600 bg-indigo-600 text-white"
-                            : "border-gray-300"
+                            : "border-slate-300 bg-white text-slate-700"
                         }`}
                       >
                         {n}
@@ -336,7 +328,7 @@ export default function ProductsPage() {
                   <button
                     disabled={state.page >= totalPages}
                     onClick={() => setState({ page: state.page + 1 })}
-                    className="rounded-md border border-gray-300 px-3 py-1.5 disabled:opacity-40"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 disabled:opacity-40"
                   >
                     Next
                   </button>
@@ -346,7 +338,7 @@ export default function ProductsPage() {
                   onChange={(e) =>
                     setState({ pageSize: parseInt(e.target.value, 10), page: 1 })
                   }
-                  className="rounded-md border border-gray-300 px-2 py-1.5"
+                  className="rounded-md border border-slate-300 bg-white px-2 py-1.5 font-medium text-slate-700"
                 >
                   <option value={10}>10 / page</option>
                   <option value={20}>20 / page</option>
@@ -366,17 +358,25 @@ export default function ProductsPage() {
           onSubmit={(data) => {
             if (editingProduct) {
               editProduct(editingProduct.id, data);
+              setProducts((prev) =>
+                prev.map((p) =>
+                  p.id === editingProduct.id ? { ...p, ...data } : p
+                )
+              );
             } else {
-              addProduct({
+              const newProduct: Product = {
                 ...data,
+                id: -Date.now(),
                 rating: 0,
                 thumbnail: "https://placehold.co/100",
                 images: [],
                 reviews: [],
-              });
+              };
+              addProduct(newProduct);
+              setProducts((prev) => [newProduct, ...prev]);
+              setTotal((t) => t + 1);
             }
             setFormOpen(false);
-            refresh();
           }}
         />
       )}
@@ -387,8 +387,9 @@ export default function ProductsPage() {
           onCancel={() => setDeletingId(null)}
           onConfirm={() => {
             deleteProduct(deletingId);
+            setProducts((prev) => prev.filter((p) => p.id !== deletingId));
+            setTotal((t) => Math.max(0, t - 1));
             setDeletingId(null);
-            refresh();
           }}
         />
       )}
