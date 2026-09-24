@@ -6,6 +6,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useProductQueryState } from "@/hooks/useProductQueryState";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useProductOverrides } from "@/context/ProductOverridesContext";
+import ProductFormModal from "@/components/ProductFormModal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   fetchProducts,
   fetchCategories,
@@ -22,21 +25,20 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
 
-  // Local typed value, separate from the URL's `q`. Only the debounced
-  // version below updates the URL and triggers a fetch.
   const [searchInput, setSearchInput] = useState(state.q);
   const debouncedSearch = useDebounce(searchInput, 400);
-
-  // Guards against stale responses: only the most recent request's result
-  // is allowed to update state.
   const requestIdRef = useRef(0);
+
+  const { applyOverrides, addProduct, editProduct, deleteProduct, addedProducts } =
+    useProductOverrides();
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => {});
   }, []);
 
-  // When the debounced search value changes, push it into the URL and
-  // reset to page 1 (only if it's actually different from what's there).
   useEffect(() => {
     if (debouncedSearch !== state.q) {
       setState({ q: debouncedSearch, page: 1 });
@@ -52,7 +54,7 @@ export default function ProductsPage() {
     fetchProducts(
       {
         q: state.q,
-        category: state.q ? "" : state.category, // search wins over category
+        category: state.q ? "" : state.category,
         sortBy: state.sortBy,
         order: state.order,
         limit: state.pageSize,
@@ -61,27 +63,32 @@ export default function ProductsPage() {
       controller.signal
     )
       .then((data) => {
-        if (myRequestId !== requestIdRef.current) return; // a newer request already started, drop this one
-        setProducts(data.products);
+        if (myRequestId !== requestIdRef.current) return;
+
+        const merged = applyOverrides(data.products);
+        const withLocalAdds =
+          state.page === 1 && !state.q && !state.category
+            ? [...addedProducts, ...merged]
+            : merged;
+
+        setProducts(withLocalAdds);
         setTotal(data.total);
         setStatus("success");
 
-        // If the requested page is beyond what actually exists (?page=999),
-        // snap back to the last valid page instead of showing a blank/broken page.
         const totalPages = Math.max(1, Math.ceil(data.total / state.pageSize));
         if (state.page > totalPages) {
           setState({ page: totalPages });
         }
       })
       .catch((err) => {
-        if (controller.signal.aborted) return; // cancelled on purpose, not a real error
+        if (controller.signal.aborted) return;
         if (myRequestId !== requestIdRef.current) return;
         setStatus("error");
       });
 
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.q, state.category, state.sortBy, state.order, state.page, state.pageSize]);
+  }, [state.q, state.category, state.sortBy, state.order, state.page, state.pageSize, addedProducts]);
 
   const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
   const from = total === 0 ? 0 : (state.page - 1) * state.pageSize + 1;
@@ -90,6 +97,10 @@ export default function ProductsPage() {
   function handleLogout() {
     logout();
     router.push("/login");
+  }
+
+  function refresh() {
+    setState({ page: state.page }); // re-triggers the fetch effect
   }
 
   return (
@@ -109,7 +120,7 @@ export default function ProductsPage() {
         </div>
 
         <div className="p-6">
-          {/* Toolbar: search, category, sort */}
+          {/* Toolbar: search, category, sort, add */}
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <input
               type="search"
@@ -147,6 +158,15 @@ export default function ProductsPage() {
               <option value="price-desc">Price (high–low)</option>
               <option value="rating-desc">Rating (high–low)</option>
             </select>
+            <button
+              onClick={() => {
+                setEditingProduct(null);
+                setFormOpen(true);
+              }}
+              className="ml-auto rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white"
+            >
+              + Add product
+            </button>
           </div>
           {state.q && (
             <p className="mb-4 -mt-2 text-xs text-gray-500">
@@ -155,7 +175,6 @@ export default function ProductsPage() {
             </p>
           )}
 
-          {/* States */}
           {status === "loading" && (
             <div className="py-16 text-center text-sm text-gray-500">
               Loading products…
@@ -166,7 +185,7 @@ export default function ProductsPage() {
               Something went wrong loading products.
               <div className="mt-3">
                 <button
-                  onClick={() => setState({ page: state.page })} // re-triggers the effect
+                  onClick={refresh}
                   className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
                 >
                   Retry
@@ -192,23 +211,48 @@ export default function ProductsPage() {
                     <th className="p-3">Price</th>
                     <th className="p-3">Rating</th>
                     <th className="p-3">Stock</th>
+                    <th className="p-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {products.map((p) => (
                     <tr key={p.id} className="border-b border-gray-100">
                       <td className="p-3">
-                        <img src={p.thumbnail} alt={p.title} className="h-10 w-10 rounded object-cover" />
+                        <img
+                          src={p.thumbnail}
+                          alt={p.title}
+                          className="h-10 w-10 rounded object-cover"
+                        />
                       </td>
                       <td className="p-3 font-medium">
-                        <button onClick={() => router.push(`/products/${p.id}`)} className="text-left hover:text-indigo-600">
-                             {p.title}
+                        <button
+                          onClick={() => router.push(`/products/${p.id}`)}
+                          className="text-left hover:text-indigo-600"
+                        >
+                          {p.title}
                         </button>
                       </td>
                       <td className="p-3 text-gray-500">{p.category}</td>
                       <td className="p-3">${p.price}</td>
                       <td className="p-3">{p.rating.toFixed(1)}★</td>
                       <td className="p-3">{p.stock}</td>
+                      <td className="p-3">
+                        <button
+                          onClick={() => {
+                            setEditingProduct(p);
+                            setFormOpen(true);
+                          }}
+                          className="mr-2 text-xs text-gray-600"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingId(p.id)}
+                          className="text-xs text-red-600"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -217,17 +261,44 @@ export default function ProductsPage() {
               {/* Mobile cards */}
               <div className="flex flex-col gap-3 md:hidden">
                 {products.map((p) => (
-                  <div key={p.id} className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3">
-                    <img src={p.thumbnail} alt={p.title} className="h-14 w-14 rounded object-cover" />
+                  <div
+                    key={p.id}
+                    className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3"
+                  >
+                    <img
+                      src={p.thumbnail}
+                      alt={p.title}
+                      className="h-14 w-14 rounded object-cover"
+                    />
                     <div>
-                     <button onClick={() => router.push(`/products/${p.id}`)} className="font-medium text-left hover:text-indigo-600">
-                            {p.title}
-                     </button>
+                      <button
+                        onClick={() => router.push(`/products/${p.id}`)}
+                        className="text-left font-medium hover:text-indigo-600"
+                      >
+                        {p.title}
+                      </button>
                       <div className="mt-1 flex gap-3 text-xs text-gray-500">
                         <span>{p.category}</span>
                         <span>${p.price}</span>
                         <span>{p.rating.toFixed(1)}★</span>
                         <span>{p.stock} in stock</span>
+                      </div>
+                      <div className="mt-2 flex gap-3 text-xs">
+                        <button
+                          onClick={() => {
+                            setEditingProduct(p);
+                            setFormOpen(true);
+                          }}
+                          className="text-gray-600"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingId(p.id)}
+                          className="text-red-600"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -286,6 +357,41 @@ export default function ProductsPage() {
           )}
         </div>
       </div>
+
+      {formOpen && (
+        <ProductFormModal
+          categories={categories}
+          existing={editingProduct}
+          onClose={() => setFormOpen(false)}
+          onSubmit={(data) => {
+            if (editingProduct) {
+              editProduct(editingProduct.id, data);
+            } else {
+              addProduct({
+                ...data,
+                rating: 0,
+                thumbnail: "https://placehold.co/100",
+                images: [],
+                reviews: [],
+              });
+            }
+            setFormOpen(false);
+            refresh();
+          }}
+        />
+      )}
+      {deletingId !== null && (
+        <ConfirmDialog
+          title="Delete product?"
+          message="This can't be undone."
+          onCancel={() => setDeletingId(null)}
+          onConfirm={() => {
+            deleteProduct(deletingId);
+            setDeletingId(null);
+            refresh();
+          }}
+        />
+      )}
     </RequireAuth>
   );
 }
