@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import RequireAuth from "@/components/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,7 @@ import {
   Product,
 } from "@/services/productService";
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const { username, logout } = useAuth();
   const router = useRouter();
   const { state, setState } = useProductQueryState();
@@ -394,5 +394,21 @@ export default function ProductsPage() {
         />
       )}
     </RequireAuth>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-100 p-6 flex items-center justify-center">
+          <div className="rounded-lg border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500 shadow-sm">
+            Loading products…
+          </div>
+        </div>
+      }
+    >
+      <ProductsPageContent />
+    </Suspense>
   );
 }
