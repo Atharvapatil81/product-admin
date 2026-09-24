@@ -200,7 +200,11 @@ export default function ProductsPage() {
                       <td className="p-3">
                         <img src={p.thumbnail} alt={p.title} className="h-10 w-10 rounded object-cover" />
                       </td>
-                      <td className="p-3 font-medium">{p.title}</td>
+                      <td className="p-3 font-medium">
+                        <button onClick={() => router.push(`/products/${p.id}`)} className="text-left hover:text-indigo-600">
+                             {p.title}
+                        </button>
+                      </td>
                       <td className="p-3 text-gray-500">{p.category}</td>
                       <td className="p-3">${p.price}</td>
                       <td className="p-3">{p.rating.toFixed(1)}★</td>
@@ -216,7 +220,9 @@ export default function ProductsPage() {
                   <div key={p.id} className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3">
                     <img src={p.thumbnail} alt={p.title} className="h-14 w-14 rounded object-cover" />
                     <div>
-                      <div className="font-medium">{p.title}</div>
+                     <button onClick={() => router.push(`/products/${p.id}`)} className="font-medium text-left hover:text-indigo-600">
+                            {p.title}
+                     </button>
                       <div className="mt-1 flex gap-3 text-xs text-gray-500">
                         <span>{p.category}</span>
                         <span>${p.price}</span>
